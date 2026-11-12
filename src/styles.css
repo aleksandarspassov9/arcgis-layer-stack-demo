@@ -45,3 +45,20 @@ h2 { font-size: 14px; margin: 23px 0 10px; padding-top: 16px; border-top: 1px so
   .workspace { grid-template-columns: 1fr; }
   .stage { min-height: 340px; height: 54svh; }
 }
+
+.map[hidden] { display: none; }
+.fallback-map { display: block; width: 100%; height: 100%; padding: 58px 16px 22px; }
+.fallback-map [role=button] { cursor: pointer; }
+.fallback-map [role=button]:focus-visible { outline: 3px solid #f3f8ff; }
+.fallback-status {
+  position: absolute;
+  top: 17px;
+  left: 17px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #31445e;
+  border-radius: 8px;
+  background: #142237;
+  color: #c7d7eb;
+  font-size: 13px;
+}

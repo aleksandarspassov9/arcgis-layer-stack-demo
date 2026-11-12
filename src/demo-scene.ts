@@ -33,6 +33,14 @@ const corridors: XY[][] = [
 ];
 const sites: XY[] = [[-4330,-1610],[-3350,-940],[-2860,700],[-2320,1430],[-1600,-600],[-1230,490],[120,410],[560,1570],[1030,-840],[1740,1990],[2330,1120],[2730,-1650],[3430,-940],[3960,1840],[4450,2440]];
 
+const mapPoints = (coordinates: XY[]) => coordinates.map(([x, y]) => x + ',' + -y).join(' ');
+
+export const topDownMap = {
+  areas: areas.map((ring, index) => ({ points: mapPoints(ring), name: 'Priority area ' + (index + 1) })),
+  corridors: corridors.map((path, index) => ({ points: mapPoints(path), name: 'Connection ' + (index + 1) })),
+  sites: sites.map(([x, y], index) => ({ x, y: -y, name: 'Site ' + (index + 1) }))
+};
+
 function project([x, y]: XY): number[] {
   return [center[0] + x, center[1] + y];
 }

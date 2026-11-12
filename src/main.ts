@@ -5,7 +5,7 @@ import Map from '@arcgis/core/Map.js';
 import Camera from '@arcgis/core/Camera.js';
 import Point from '@arcgis/core/geometry/Point.js';
 import SceneView from '@arcgis/core/views/SceneView.js';
-import { center, createLayers, elevation, layerDefinitions, spatialReference } from './demo-scene';
+import { center, createLayers, elevation, layerDefinitions, spatialReference, topDownMap } from './demo-scene';
 
 @Component({
   selector: 'app-root',
@@ -15,8 +15,41 @@ import { center, createLayers, elevation, layerDefinitions, spatialReference } f
       <span class="badge">Sample data</span>
     </header>
     <main class="workspace">
-      <section class="stage" aria-label="Interactive 3D map">
-        <div class="map" #map></div>
+      <section class="stage" aria-label="Interactive map">
+        <div class="map" [hidden]="fallback()" #map></div>
+        @if (fallback()) {
+          <p class="fallback-status" role="status">2D view · 3D is unavailable in this browser</p>
+          <svg class="fallback-map" viewBox="-6300 -4600 12600 9200" role="group" aria-label="Top-down map">
+            <defs>
+              <pattern id="map-grid" width="1000" height="1000" patternUnits="userSpaceOnUse">
+                <path d="M 1000 0 H 0 V 1000" fill="none" stroke="#334d63" stroke-width="14"/>
+              </pattern>
+            </defs>
+            <rect x="-5900" y="-4200" width="11800" height="8400" fill="#152234"/>
+            <rect x="-5900" y="-4200" width="11800" height="8400" fill="url(#map-grid)" stroke="#52718d" stroke-width="24"/>
+            @if (visibility()[0]) {
+              @for (area of topDown.areas; track area.name) {
+                <polygon [attr.points]="area.points" fill="#2cb98f" fill-opacity=".38"
+                  [attr.stroke]="definitions[0].color" stroke-width="30" tabindex="0" role="button" [attr.aria-label]="area.name"
+                  (click)="selection.set(area.name)" (keydown.enter)="selection.set(area.name)" />
+              }
+            }
+            @if (visibility()[1]) {
+              @for (corridor of topDown.corridors; track corridor.name) {
+                <polyline [attr.points]="corridor.points" fill="none" [attr.stroke]="definitions[1].color"
+                  stroke-width="48" tabindex="0" role="button" [attr.aria-label]="corridor.name"
+                  (click)="selection.set(corridor.name)" (keydown.enter)="selection.set(corridor.name)" />
+              }
+            }
+            @if (visibility()[2]) {
+              @for (site of topDown.sites; track site.name) {
+                <circle [attr.cx]="site.x" [attr.cy]="site.y" r="85" [attr.fill]="definitions[2].color"
+                  stroke="#f0e8ff" stroke-width="20" tabindex="0" role="button" [attr.aria-label]="site.name"
+                  (click)="selection.set(site.name)" (keydown.enter)="selection.set(site.name)" />
+              }
+            }
+          </svg>
+        } @else {
         <div class="toolbar">
           <div class="presets" aria-label="Camera presets">
             <button type="button" [class.active]="preset() === 'angled'" [attr.aria-pressed]="preset() === 'angled'" [disabled]="!ready()" (click)="setPreset('angled')">Angled</button>
@@ -25,25 +58,28 @@ import { center, createLayers, elevation, layerDefinitions, spatialReference } f
           <button class="orbit" type="button" [class.active]="orbiting()" [attr.aria-pressed]="orbiting()" [disabled]="!ready()" (click)="toggleOrbit()">⟳ Orbit</button>
         </div>
         @if (!ready()) {
-          <p class="map-status" role="status">{{ error() || 'Loading 3D scene…' }}</p>
+          <p class="map-status" role="status">Loading 3D scene…</p>
         }
         <p class="map-hint">Right-drag to rotate · Scroll to zoom</p>
+        }
         @if (selection(); as name) {
           <button class="selection" type="button" (click)="selection.set(null)" aria-label="Clear selection">{{ name }} ×</button>
         }
       </section>
       <aside class="panel">
+        @if (!fallback()) {
         <div class="control">
           <label for="spread">Spread <output for="spread">{{ spread() }}%</output></label>
           <input id="spread" type="range" min="0" max="100" [value]="spread()" [disabled]="!ready()" (input)="setSpread($event)" />
           <div class="scale"><span>Merged</span><span>Separated</span></div>
         </div>
+        }
         <h2>Layers</h2>
         @for (layer of definitions; track layer.title; let index = $index) {
           <label class="layer">
             <span class="swatch" [style.background]="layer.color"></span>
             <span class="layer-text">{{ layer.title }}<small>{{ layer.kind }}</small></span>
-            <input type="checkbox" [checked]="visibility()[index]" [disabled]="!ready()" (change)="setVisibility(index, $event)" />
+            <input type="checkbox" [checked]="visibility()[index]" [disabled]="!ready() && !fallback()" (change)="setVisibility(index, $event)" />
           </label>
         }
       </aside>
@@ -57,7 +93,8 @@ class App {
   readonly orbiting = signal(false);
   readonly preset = signal<'angled' | 'top' | null>('angled');
   readonly ready = signal(false);
-  readonly error = signal('');
+  readonly fallback = signal(false);
+  readonly topDown = topDownMap;
   readonly selection = signal<string | null>(null);
   private readonly container = viewChild.required<ElementRef<HTMLDivElement>>('map');
   private readonly destroyRef = inject(DestroyRef);
@@ -79,6 +116,12 @@ class App {
 
   private async init() {
     try {
+      const context = document.createElement('canvas').getContext('webgl2');
+      if (!context) {
+        this.fallback.set(true);
+        return;
+      }
+      context.getExtension('WEBGL_lose_context')?.loseContext();
       esriConfig.assetsPath = new URL('assets/', document.baseURI).href;
       const { base, grid, levels } = createLayers();
       this.levels = levels;
@@ -120,7 +163,11 @@ class App {
     } catch (error) {
       if (this.destroyRef.destroyed) return;
       console.error(error);
-      this.error.set('The 3D scene could not start. Check that WebGL is enabled.');
+      this.view?.destroy();
+      this.view = undefined;
+      this.levels = [];
+      this.ready.set(false);
+      this.fallback.set(true);
     }
   }
 
