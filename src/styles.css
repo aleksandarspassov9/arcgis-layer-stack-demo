@@ -1,0 +1,47 @@
+@import '@arcgis/core/assets/esri/themes/dark/main.css';
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0b1220;
+  color: #edf4ff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled, input:disabled { cursor: wait; opacity: .55; }
+.header, .workspace { width: min(1500px, calc(100% - 64px)); margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 31px 0 25px; }
+.brand { color: #8eaac9; font-size: 11px; font-weight: 750; letter-spacing: .19em; }
+h1 { margin: 7px 0 0; font-size: clamp(24px, 4vw, 35px); letter-spacing: -.045em; }
+.badge { color: #b4c7de; border: 1px solid #2d415b; border-radius: 20px; padding: 7px 12px; font-size: 12px; white-space: nowrap; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 266px; gap: 16px; margin-bottom: 28px; }
+.stage, .panel { border: 1px solid #263953; border-radius: 14px; }
+.stage { overflow: hidden; position: relative; height: min(740px, calc(100svh - 143px)); min-height: 460px; background: #101a2b; }
+.map { width: 100%; height: 100%; }
+.toolbar { position: absolute; top: 17px; left: 17px; display: flex; gap: 9px; flex-wrap: wrap; }
+.presets { display: flex; gap: 3px; padding: 3px; background: #111e31; border: 1px solid #31445e; border-radius: 9px; }
+.toolbar button, .selection { background: #142237; color: #c7d7eb; border: 1px solid transparent; border-radius: 6px; padding: 7px 11px; font-size: 13px; }
+.toolbar .active { background: #263d5e; border-color: #49688b; color: #f3f8ff; }
+.toolbar .orbit { border-color: #31445e; border-radius: 9px; }
+.map-status { position: absolute; top: 44%; inset-inline: 12%; text-align: center; pointer-events: none; }
+.map-hint { position: absolute; bottom: 22px; left: 14px; margin: 0; background: #101a2b; color: #afc1d9; padding: 6px 9px; border-radius: 5px; font-size: 12px; pointer-events: none; }
+.selection { position: absolute; right: 14px; bottom: 25px; border-color: #49688b; }
+.panel { align-self: start; background: #101a2b; padding: 18px; }
+.control label { display: flex; justify-content: space-between; font-size: 15px; font-weight: 650; }
+.control output { color: #a7ccff; font-variant-numeric: tabular-nums; }
+input { accent-color: #77aaff; }
+input[type=range] { width: 100%; margin: 14px 0 3px; }
+.scale { display: flex; justify-content: space-between; font-size: 11px; color: #a7bad2; }
+h2 { font-size: 14px; margin: 23px 0 10px; padding-top: 16px; border-top: 1px solid #263953; }
+.layer { display: flex; gap: 10px; align-items: center; padding: 9px 0; font-size: 13px; cursor: pointer; }
+.swatch { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.layer-text { flex: 1; }
+.layer small { display: block; color: #a7bad2; margin-top: 3px; }
+@media (max-width: 740px) {
+  .header, .workspace { width: calc(100% - 24px); }
+  .header { padding: 17px 0; }
+  .workspace { grid-template-columns: 1fr; }
+  .stage { min-height: 340px; height: 54svh; }
+}
